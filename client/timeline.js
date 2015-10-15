@@ -59,8 +59,8 @@ window.onload = function() {
     }
   };
 
-  sync.fromTo(box2, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
-  sync.fromTo(box2, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
+  sync.fromTo(box1, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
+  sync.fromTo(box1, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
 
 
   // TweenMax.ticker.addEventListener('tick', logEvent);
