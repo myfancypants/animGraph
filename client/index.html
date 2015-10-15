@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>GSAP Testing</title>
+<style>
+  html, body {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+  }
+
+  /* Scale canvas with resize attribute to full size */
+  canvas[resize] {
+      height: 100% ;
+      width: 100%;
+  }
+
+  .box {
+    position: relative;
+    width:60px;
+    height: 60px;
+    margin-right: 10px;
+    float: left;
+    background-color: blue;
+    top: 300px;
+    left: 50px;
+  }
+  #box2 {
+    left:0px;
+    top:100px;
+  }
+  #box3 {
+    top:200px;
+  }
+</style>
+<script type="text/javascript" src="./lib/gsap/src/uncompressed/TweenMax.js"></script>
+<script type="text/javascript" src="./lib/gsap/src/uncompressed/TimelineMax.js"></script>
+<script type="text/javascript" src="./lib/paper/dist/paper-full.js"></script>
+<script type="text/javascript" src="./bezierEasing.js"></script>
+<script type="text/paperscript" src="./graphEditor.js" canvas="canvas"></script>
+<script type="text/javascript" src="./timeline.js"></script>
+</head>
+<body>
+  <button id="button">Play/Pause</button>
+  <div class="box" id="box1"></div>
+  <div class="box" id="box2"></div>
+
+  <canvas id="canvas" resize></canvas>
+</body>
+</html>

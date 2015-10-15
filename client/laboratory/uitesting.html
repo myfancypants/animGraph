@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Moving Path Handles</title>
+<style>
+  html,
+  body {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+  }
+
+  /* Scale canvas with resize attribute to full size */
+  canvas[resize] {
+      width: 100%;
+      height: 100%;
+  }
+</style>
+<script type="text/javascript" src="./paperjs/dist/paper-full.js"></script>
+<script type="text/paperscript" canvas="canvas">
+  var values = {
+  paths: 50,
+  minPoints: 5,
+  maxPoints: 15,
+  minRadius: 30,
+  maxRadius: 90
+};
+
+var hitOptions = {
+  handles: true,
+  segments: true,
+  stroke: true,
+  fill: true,
+  tolerance: 5
+};
+project.options.handleSize = 10;
+
+var canvasZoom = document.getElementById("canvas");
+if (canvasZoom.addEventListener){
+  canvasZoom.addEventListener('mousewheel', onMouseWheel, false);
+  canvasZoom.addEventListener('DOMMouseScroll', onMouseWheel, false);
+}
+else {
+  canvasZoom.attachEvent('onmousewheel', onMouseWheel);
+}
+
+
+createPaths();
+
+function createPaths() {
+  var radiusDelta = values.maxRadius - values.minRadius;
+  var pointsDelta = values.maxPoints - values.minPoints;
+  for (var i = 0; i < values.paths; i++) {
+    var radius = values.minRadius + Math.random() * radiusDelta;
+    var points = values.minPoints + Math.floor(Math.random() * pointsDelta);
+    var path = createBlob(view.size * Point.random(), radius, points);
+    var lightness = (Math.random() - 0.5) * 0.4 + 0.4;
+    var hue = Math.random() * 360;
+    path.fillColor = { hue: hue, saturation: 1, lightness: lightness };
+    path.strokeColor = 'black';
+  };
+}
+
+function createBlob(center, maxRadius, points) {
+  var path = new Path();
+  path.closed = true;
+  for (var i = 0; i < points; i++) {
+    var delta = new Point({
+      length: (maxRadius * 0.5) + (Math.random() * maxRadius * 0.5),
+      angle: (360 / points) * i
+    });
+    path.add(center + delta);
+  }
+  path.smooth();
+  return path;
+}
+
+var segment, path, handleIn, handleOut, canvasSelected, initialPoint, viewCenter, prevDelta;
+var movePath = false;
+
+function onMouseDown(event) {
+  if (path) {
+    path.fullySelected = false;
+  }
+  segment = path = handleIn = handleOut = canvasSelected = initialPoint = null;
+  var hitResult = project.hitTest(event.point, hitOptions);
+  if (!hitResult){
+    canvasSelected = true;
+    initialPoint = event.point;
+    viewCenter = view.center;
+    return;
+  }
+  console.log(hitResult.type);
+  if (event.modifiers.shift) {
+    if (hitResult.type === 'segment') {
+      hitResult.segment.remove();
+    };
+    return;
+  }
+
+  if (hitResult) {
+    path = hitResult.item;
+    path.fullySelected = true;
+    if (hitResult.type === 'segment') {
+      console.log(hitResult)
+      segment = hitResult.segment;
+    } else if (hitResult.type === 'stroke') {
+      var location = hitResult.location;
+      segment = path.insert(location.index + 1, event.point);
+      path.smooth();
+    }
+    else if (hitResult.type === 'handle-in') {
+      console.log(hitResult);
+      handleIn = hitResult.segment;
+    }
+    else if (hitResult.type === 'handle-out') {
+      console.log(hitResult);
+      handleOut = hitResult.segment;
+    }
+  }
+  movePath = hitResult.type == 'fill';
+  if (movePath)
+    project.activeLayer.addChild(hitResult.item);
+}
+
+function onMouseMove(event) {
+  // if (event.item)
+    // event.item.fullySelected = true;
+    // setTimeout(function() {project.activeLayer.selected = false; }, 1000);
+}
+
+function onMouseDrag(event) {
+  if (segment) {
+    segment.point += event.delta;
+    // path.smooth();
+  } 
+  else if (handleIn) {
+    handleIn.handleIn += event.delta;
+    handleIn.handleOut -= event.delta;
+  } 
+  else if (handleOut) {
+    handleOut.handleOut += event.delta;
+    handleOut.handleIn -= event.delta;
+  } 
+  else if (canvasSelected) {
+    var moveFactor = .9;
+    prevDelta = prevDelta || 0;
+    // console.log('downPoint, delta, lastPoint, middlePoint, point',event.downPoint, event.delta, event.lastPoint, event.middlePoint, event.point);
+
+    // var changeDelta = event.delta;
+    // if (changeDelta.x) {
+    //   changeDelta.x *= -moveFactor;
+    // }
+    // if (changeDelta.y){
+    //   changeDelta.y *= -moveFactor;
+    // }
+    // console.log(changeDelta);
+    // view.center += changeDelta;
+    // console.log(event.lastPoint);
+    // var changeDelta = event.delta;
+    // changeDelta.x = Math.abs(changeDelta.x);
+    // changeDelta.y = Math.abs(changeDelta.y);
+    // view.center += (event.delta);
+
+    // console.log('initX, initY, eX, eY',initialPoint.x, initialPoint.y, event.event.x, event.event.y);
+
+    var changeDelta = new Point(-(event.event.x - initialPoint.x), -(event.event.y - initialPoint.y));
+    console.log('change delta',changeDelta);
+    console.log('viewCenter', viewCenter)
+    console.log('eventx and initial point', event.event.x, initialPoint.x);
+    view.center = viewCenter + changeDelta;
+    prevDelta = changeDelta;
+
+  } 
+  else if (path) {
+    path.position += event.delta;
+  } 
+}
+
+function onMouseWheel(event) {
+  var event = window.event || event;
+  var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
+  var oldZoom = view.zoom;
+  var oldHandles = project.options.handleSize;
+  var zoomFactor = 1.1;
+
+  // console.log(delta);
+
+  if (delta < 0) {
+    view.zoom = oldZoom * zoomFactor;
+    project.options.handleSize = oldHandles * zoomFactor;
+  }
+  else {
+    view.zoom = oldZoom / zoomFactor;
+    project.options.handleSize = oldHandles / zoomFactor;
+  }
+
+  return false;
+}
+
+function onMouseUp(event) {
+
+}
+</script>
+</head>
+<body>
+  <canvas id="canvas" resize></canvas>
+</body>
+</html>

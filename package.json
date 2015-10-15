@@ -1,0 +1,15 @@
+{
+  "name": "animGraph",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "postinstall": "bower install"
+  },
+  "dependencies": {
+    "bower": "^1.5.3",
+    "express": "^4.4.5"
+  }
+}

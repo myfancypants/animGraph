@@ -1,0 +1,16 @@
+{
+  "name": "animGraph",
+  "version": "0.0.0",
+  "authors": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "client/bower_components",
+    "client/lib"
+  ],
+  "dependencies": {
+    "gsap": "~1.18.0",
+    "paper": "~0.9.24"
+  }
+}

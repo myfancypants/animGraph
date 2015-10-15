@@ -1,0 +1,14 @@
+.DS_Store
+
+# Icon must ends with two \r.
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Trashes
+node_modules/
+client/lib
+npm-debug.log
