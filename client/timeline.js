@@ -1,24 +1,51 @@
-window.globals = {};
+window.globals = {};  
 window.onload = function() {
   var box1 = document.getElementById('box1');
   var box2 = document.getElementById('box2');
+  var canvas = document.getElementById('canvas');
   var play = false;
-  var button = document.getElementById('button').addEventListener('click', function(){
+  var timeline = new TimelineMax({repeat: -1});
+  var timeRot = new TimelineMax({delay: 2});
+  var timeColor = new TimelineMax({delay: 2});
+  var sync = new TimelineMax({repeat: -1});
+  var scale = {
+    x: {pixels: 100, ratio: 1},
+    y: {pixels: 100, ratio: 300}
+  }
+  var prevPixelX = 100;
+  var prevPixelY = 100;
+  var prevCoordX = 0;
+  var prevCoordY = 0;
+
+  var playback = function() {
     if (play) {
-      sync.play();
+      timeline.play();
       play = false; 
     }
     else {
-      sync.pause();
+      timeline.pause();
       play = true;
     }
+  };
+  var playButtonListener = document.getElementById('play-pause').addEventListener('click', function(){
+    playback();
   });
-  var testEase = BezierEasing(.5,-2,.2,2);
-  var timeline = new TimelineMax({delay: 2});
-  var timeRot = new TimelineMax({delay: 2});
-  var timeColor = new TimelineMax({delay: 2});
-  var sync = new TimelineMax({repeat: -1})
+  var spaceBarListener = document.addEventListener('keydown', function(event){
+    if (event.keyCode === 32) {
+      playback();
+    }
+  });
 
+  var trackMouse = function(event) {
+    var x = event.layerX;
+    var y = event.layerY;
+
+    createKeyFrame(x, y);
+    canvas.removeEventListener('click', trackMouse);
+  }
+  var addKeyFrameListener = document.getElementById('add-keyframe').addEventListener('click', function(){
+    canvas.addEventListener('click', trackMouse);
+  });
 
   // timeline.add(TweenMax.to(box1, 1, {left:"300px", ease: new Ease(BezierEasing(1, 0, 0, 1).get)}));
   // timeline.add(TweenMax.to(box1, 1, {top:"100px", ease: new Ease(BezierEasing(.5, -2, .2, 2).get)}));
@@ -39,12 +66,11 @@ window.onload = function() {
 
   var recalcEase = function(tween) {
     if (globals.recalc) {
-      // console.log(sync.currentLabel()); 
       // tween.kill();
       // tween = sync.fromTo(box2, 2, {left: "0px"}, {left: "500px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: new Ease(updateEase(getEaseArray()))});
 
-      var prevTween = globals.recalc.segmentPrev ? sync.getChildren()[globals.recalc.segmentPrev.index] : null;
-      var nextTween = globals.recalc.segmentNext ? sync.getChildren()[globals.recalc.segmentSelected.index] : null;
+      var prevTween = globals.recalc.segmentPrev ? timeline.getChildren()[globals.recalc.segmentPrev.index] : null;
+      var nextTween = globals.recalc.segmentNext ? timeline.getChildren()[globals.recalc.segmentSelected.index] : null;
       
       if (prevTween){
         prevTween.invalidate();      
@@ -59,8 +85,25 @@ window.onload = function() {
     }
   };
 
-  sync.fromTo(box1, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
-  sync.fromTo(box1, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
+  var createKeyFrame = function(x, y) {
+    globals.drawKeyFrame(x, y);
+    var totalKeyFrame = globals.xTSpline.segments.length;
+    var adjustedTime = ((x - prevCoordX) / scale.x.pixels) * scale.x.ratio;
+    var adjustedValue = (((y - prevCoordY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+
+    console.log(adjustedValue, adjustedTime);
+
+    if (totalKeyFrame > 1) {
+      timeline.fromTo(box1, adjustedTime, {left: prevPixelY + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrame - 2], globals.xTSpline.segments[totalKeyFrame - 1]))});
+    }
+    prevPixelY = adjustedValue;
+    prevCoordX = x;
+    prevCoordY = y;
+  }
+
+  // sync.fromTo(box1, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
+  // sync.fromTo(box1, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
+
 
 
   // TweenMax.ticker.addEventListener('tick', logEvent);

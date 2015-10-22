@@ -9,33 +9,15 @@ var hitOptions = {
 var handleIn;
 var handleOut;
 
+var defaultHandles = 100;
+
 
 project.options.handleSize = 10;
 
 var xTSpline = globals.xTSpline = new Path();
 xTSpline.strokeColor = "black";
-xTSpline.add(new Point(300, 300));
-xTSpline.add(new Point(500, 200));
-xTSpline.add(new Point(700, 400));
-// xTSpline.add(new Point(700, 400));
 xTSpline.smooth();
 xTSpline.fullySelected = true;
-
-
-xTSpline.segments[0].handleIn.x = -150;
-xTSpline.segments[0].handleIn.y = 0;
-xTSpline.segments[0].handleOut.x = 150;
-xTSpline.segments[0].handleOut.y = 0;
-
-xTSpline.segments[1].handleIn.x = -100;
-xTSpline.segments[1].handleIn.y = 0;
-xTSpline.segments[1].handleOut.x = 100;
-xTSpline.segments[1].handleOut.y = 0;
-
-xTSpline.segments[2].handleIn.x = -100;
-xTSpline.segments[2].handleIn.y = 0;
-xTSpline.segments[2].handleOut.x = 100;
-xTSpline.segments[2].handleOut.y = 0;
 // console.log(xTSpline.segments[0]);
 
 var onMouseDown = function(event) {
@@ -63,7 +45,18 @@ var onMouseDrag = function(event) {
   globals.pause = true;
 };
 
-globals.calcEase = function(segment1, segment2){
+globals.drawKeyFrame = function(x, y) {
+  var keyframe = new Point(x, y);
+  var keyHandleIn = new Point(-100, 0);
+  var keyHandleOut = new Point(100, 0);
+  var addKeyFrame = xTSpline.add(new Segment(keyframe, keyHandleIn, keyHandleOut));
+  
+  addKeyFrame.selected = true;
+  view.update();
+  
+}
+
+globals.calcEase = function(segment1, segment2) {
   var xDist = segment2.point.x - segment1.point.x;
   var yDist = segment1.point.y - segment2.point.y;
 
