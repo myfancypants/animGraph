@@ -30,9 +30,12 @@ window.onload = function() {
   var playButtonListener = document.getElementById('play-pause').addEventListener('click', function(){
     playback();
   });
-  var spaceBarListener = document.addEventListener('keydown', function(event){
+  var keyPressListener = document.addEventListener('keydown', function(event){
     if (event.keyCode === 32) {
       playback();
+    }
+    if (event.keyCode === 75) {
+      canvas.addEventListener('click', trackMouse);
     }
   });
 
@@ -47,6 +50,7 @@ window.onload = function() {
     canvas.addEventListener('click', trackMouse);
   });
 
+
   // timeline.add(TweenMax.to(box1, 1, {left:"300px", ease: new Ease(BezierEasing(1, 0, 0, 1).get)}));
   // timeline.add(TweenMax.to(box1, 1, {top:"100px", ease: new Ease(BezierEasing(.5, -2, .2, 2).get)}));
   // timeline.add(TweenMax.to(box1, 1, {left:"700px", ease: new Ease(BezierEasing(1, 1, 0, 1.5).get)}));
@@ -57,7 +61,8 @@ window.onload = function() {
   // timeColor.add(TweenMax.to(box1, 3, {backgroundColor: "red", ease: new Ease(BezierEasing(1, 1, 0, 1.5).get)}));
   
   var updateEase = function(ease) {
-    return new Ease(BezierEasing(ease[0], ease[1], ease[2], ease[3]).get);
+    // return new Ease(BezierEasing(ease[0], ease[1], ease[2], ease[3]).get);
+    return new Ease(CubicBezier.config(ease[0], ease[1], ease[2], ease[3]));
   }
 
   var getEaseArray = function(segment1, segment2) {
@@ -88,18 +93,20 @@ window.onload = function() {
   var createKeyFrame = function(x, y) {
     globals.drawKeyFrame(x, y);
     var totalKeyFrame = globals.xTSpline.segments.length;
-    var adjustedTime = ((x - prevCoordX) / scale.x.pixels) * scale.x.ratio;
-    var adjustedValue = (((y - prevCoordY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
 
-    console.log(adjustedValue, adjustedTime);
 
     if (totalKeyFrame > 1) {
+      var adjustedTime = ((x - prevCoordX) / scale.x.pixels) * scale.x.ratio;
+      var adjustedValue = (((y - prevCoordY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+
       timeline.fromTo(box1, adjustedTime, {left: prevPixelY + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrame - 2], globals.xTSpline.segments[totalKeyFrame - 1]))});
+      
+      prevPixelY = adjustedValue;
     }
-    prevPixelY = adjustedValue;
     prevCoordX = x;
     prevCoordY = y;
   }
+
 
   // sync.fromTo(box1, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
   // sync.fromTo(box1, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
