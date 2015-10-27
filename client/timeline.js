@@ -91,22 +91,72 @@ window.onload = function() {
   };
 
   var createKeyFrame = function(x, y) {
-    globals.drawKeyFrame(x, y);
-    var totalKeyFrame = globals.xTSpline.segments.length;
+    var insertionIndex = keyFrameInsertionCheck(x, y);
 
 
-    if (totalKeyFrame > 1) {
-      var adjustedTime = ((x - prevCoordX) / scale.x.pixels) * scale.x.ratio;
-      var adjustedValue = (((y - prevCoordY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+    globals.drawKeyFrame(x, y, insertionIndex);
+    var totalKeyFrames = globals.xTSpline.segments.length;
 
-      timeline.fromTo(box1, adjustedTime, {left: prevPixelY + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrame - 2], globals.xTSpline.segments[totalKeyFrame - 1]))});
-      
-      prevPixelY = adjustedValue;
+
+    if (totalKeyFrames > 1) {
+
+      if (insertionIndex === null){
+        console.log('null insertion');
+
+        var adjustedTime = ((x - prevCoordX) / scale.x.pixels) * scale.x.ratio;
+        var adjustedValue = (((y - prevCoordY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+
+        timeline.fromTo(box1, adjustedTime, {left: prevPixelY + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrames - 2], globals.xTSpline.segments[totalKeyFrames - 1]))});
+        globals.xTSpline.tweenData.push({element: box1, adjustedTime: adjustedTime, prevPixelY: prevPixelY, adjustedValue: adjustedValue, prevCoordX: prevCoordX, prevCoordY: prevCoordY});
+        prevPixelY = adjustedValue;
+        
+      }
+
+      else {
+        console.log('insertionIndex found');
+
+        timeline.clear();
+
+        for (var i = 0; i < globals.xTSpline.tweenData.length; i ++) {
+          var currentTween = globals.xTSpline.tweenData[i];
+          console.log(currentTween);
+
+          if (i === insertionIndex) {
+            var insertAdjustedTime = ((x - currentTween.prevCoordX) / scale.x.pixels) * scale.x.ratio;
+            var insertAdjustedValue = (((y - currentTween.prevCoordY) / scale.y.pixels) * scale.y.ratio) + currentTween.prevPixelY;
+            var remainderTime = currentTween.adjustedTime - insertAdjustedTime;
+
+            console.log('insertAdjustedTime', insertAdjustedTime);
+
+            timeline.fromTo(currentTween.element, insertAdjustedTime, {left: currentTween.prevPixelY + "px"}, {left: insertAdjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionIndex], globals.xTSpline.segments[insertionIndex + 1]))});
+
+            timeline.fromTo(currentTween.element, remainderTime, {left: insertAdjustedValue + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionIndex + 1], globals.xTSpline.segments[insertionIndex + 2]))});
+            globals.xTSpline.tweenData.splice(i + 1, 0, {element: box1, adjustedTime: insertAdjustedTime, prevPixelY: insertAdjustedValue, adjustedValue: currentTween.adjustedValue, prevCoordX: x, prevCoordY: y});
+            
+            i++;
+          }
+          else {
+            timeline.fromTo(currentTween.element, currentTween.adjustedTime, {left: currentTween.prevPixelY + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[i], globals.xTSpline.segments[i + 1]))});
+          }
+        }
+      }
     }
-    prevCoordX = x;
-    prevCoordY = y;
-  }
 
+    if (insertionIndex === null) {
+      prevCoordX = x;
+      prevCoordY = y;
+    }
+  };
+
+  var keyFrameInsertionCheck = function(x, y) {
+    for (var i = 0; i < globals.xTSpline.segments.length; i++) {
+      if (globals.xTSpline.segments[i + 1] && x > globals.xTSpline.segments[i].point.x && x < globals.xTSpline.segments[i + 1].point.x) {
+        console.log('we have a point inbetween!, i is:', i);
+        return i;
+      }
+    }
+    return null;
+  }
 
   // sync.fromTo(box1, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
   // sync.fromTo(box1, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
@@ -115,4 +165,4 @@ window.onload = function() {
 
   // TweenMax.ticker.addEventListener('tick', logEvent);
   // setTimeout(function(){TweenMax.ticker.removeEventListener('tick', logEvent)}, 1500);
-  }
+}
