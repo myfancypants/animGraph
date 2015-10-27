@@ -9,6 +9,7 @@ var hitOptions = {
 
 var handleIn;
 var handleOut;
+var keyframe;
 
 var defaultHandles = 50;
 
@@ -23,7 +24,7 @@ xTSpline.tweenData = [];
 // console.log(xTSpline.segments[0]);
 
 var onMouseDown = function(event) {
-  handleIn = handleOut = null;
+  handleIn = handleOut = keyframe = null;
 
   var hitResult = project.hitTest(event.point, hitOptions);
 
@@ -40,6 +41,9 @@ var onMouseDown = function(event) {
   else if (hitResult.type === 'handle-out') {
     handleOut = hitResult.segment;
   }
+  else if (hitResult.type === 'segment') {
+    keyframe = hitResult.segment;
+  }
   else {
     console.log('location--->',hitResult.location, 'location index', hitResult.location.index);
   }
@@ -54,14 +58,17 @@ var onMouseDrag = function(event) {
     handleOut.handleOut += event.delta;
     handleOut.handleIn -= event.delta;
   } 
+  else if (keyframe) {
+    keyframe.point += event.delta;
+  }
 };
 
 globals.drawKeyFrame = function(x, y, index) {
 
-  var keyframe = new Point(x, y);
+  var newKeyframe = new Point(x, y);
   var keyHandleIn = new Point(-defaultHandles, 0);
   var keyHandleOut = new Point(defaultHandles, 0);
-  var addKeyFrame = index !== null ? xTSpline.insert(index + 1, new Segment(keyframe, keyHandleIn, keyHandleOut)) : xTSpline.add(new Segment(keyframe, keyHandleIn, keyHandleOut));
+  var addKeyFrame = index !== null ? xTSpline.insert(index + 1, new Segment(newKeyframe, keyHandleIn, keyHandleOut)) : xTSpline.add(new Segment(newKeyframe, keyHandleIn, keyHandleOut));
   
   addKeyFrame.selected = true;
   view.update();
@@ -101,9 +108,12 @@ var onMouseUp = function(event) {
     segmentSelected = xTSpline.segments[handleIn.index]; 
     segmentNext = xTSpline.segments[handleIn.index + 1] ? xTSpline.segments[handleIn.index + 1] : null; 
   }
-  globals.recalc = {segmentPrev: segmentPrev, segmentSelected: segmentSelected, segmentNext: segmentNext};
+  else if (keyframe) {
+    segmentPrev = xTSpline.segments[keyframe.index - 1] ? xTSpline.segments[keyframe.index- 1] : null;
+    segmentSelected = xTSpline.segments[keyframe.index]; 
+    segmentNext = xTSpline.segments[keyframe.index + 1] ? xTSpline.segments[keyframe.index + 1] : null; 
+
+  }
+  globals.recalc = {segmentPrev: segmentPrev, segmentSelected: segmentSelected, segmentNext: segmentNext, keyframe: keyframe};
 
 }
-
-
-// console.log(globals.calcEase(xTSpline.segments));

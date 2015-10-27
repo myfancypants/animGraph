@@ -27,9 +27,11 @@ window.onload = function() {
       play = true;
     }
   };
+
   var playButtonListener = document.getElementById('play-pause').addEventListener('click', function(){
     playback();
   });
+
   var keyPressListener = document.addEventListener('keydown', function(event){
     if (event.keyCode === 32) {
       playback();
@@ -45,50 +47,70 @@ window.onload = function() {
 
     createKeyFrame(x, y);
     canvas.removeEventListener('click', trackMouse);
-  }
+  };
+
   var addKeyFrameListener = document.getElementById('add-keyframe').addEventListener('click', function(){
     canvas.addEventListener('click', trackMouse);
   });
-
-
-  // timeline.add(TweenMax.to(box1, 1, {left:"300px", ease: new Ease(BezierEasing(1, 0, 0, 1).get)}));
-  // timeline.add(TweenMax.to(box1, 1, {top:"100px", ease: new Ease(BezierEasing(.5, -2, .2, 2).get)}));
-  // timeline.add(TweenMax.to(box1, 1, {left:"700px", ease: new Ease(BezierEasing(1, 1, 0, 1.5).get)}));
-
-  // timeRot.add(TweenMax.to(box1, 1, {rotation: 360, ease: new Ease(BezierEasing(1, 1, 0, 1.5).get)}));
-  // timeRot.add(TweenMax.to(box1, 1.5, {rotation: -540, ease: new Ease(BezierEasing(.7, 2, .3, 1).get)}));
-
-  // timeColor.add(TweenMax.to(box1, 3, {backgroundColor: "red", ease: new Ease(BezierEasing(1, 1, 0, 1.5).get)}));
   
   var updateEase = function(ease) {
     // return new Ease(BezierEasing(ease[0], ease[1], ease[2], ease[3]).get);
     return new Ease(CubicBezier.config(ease[0], ease[1], ease[2], ease[3]));
-  }
+  };
 
   var getEaseArray = function(segment1, segment2) {
     return globals.calcEase(segment1, segment2);
-  }
+  };
+
+  var adjustTime = function(x, prevX) {
+    return ((x - prevX) / scale.x.pixels) * scale.x.ratio;
+  };
+
+  var adjustValue = function(y, prevY, prevPixelY){
+    return (((y - prevY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+  };
 
   var recalcEase = function(tween) {
     if (globals.recalc) {
-      // tween.kill();
-      // tween = sync.fromTo(box2, 2, {left: "0px"}, {left: "500px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: new Ease(updateEase(getEaseArray()))});
+      var segmentPrev = globals.recalc.segmentPrev;
+      var segmentNext = globals.recalc.segmentNext;
+      var segmentSelected = globals.recalc.segmentSelected;
+      var prevTween = segmentPrev ? timeline.getChildren()[segmentPrev.index] : null;
+      var nextTween = segmentNext ? timeline.getChildren()[segmentSelected.index] : null;
+      var keyframe = globals.recalc.keyframe
+      if (keyframe) {
+        if (prevTween) {
+          // console.log(prevTween);
+          var tweenData = globals.xTSpline.tweenData[segmentPrev.index];
+          var recalcDuration = adjustTime(keyframe.point.x, tweenData.prevCoordX);
+          var recalcValue = adjustValue(keyframe.point.y, tweenData.prevCoordY, tweenData.prevPixelY);
+          // console.log('recalc duration & value', recalcDuration, recalcValue, prevTween.vars.css);
 
-      var prevTween = globals.recalc.segmentPrev ? timeline.getChildren()[globals.recalc.segmentPrev.index] : null;
-      var nextTween = globals.recalc.segmentNext ? timeline.getChildren()[globals.recalc.segmentSelected.index] : null;
-      
-      if (prevTween){
-        prevTween.invalidate();      
-        prevTween.vars.ease = updateEase(getEaseArray(globals.recalc.segmentPrev, globals.recalc.segmentSelected));
+
+          prevTween.invalidate();
+          prevTween.vars.css.left = recalcValue + 'px';
+        }
+        if (nextTween) {
+          var tweenData = globals.xTSpline.tweenData[segmentSelected.index];
+          console.log('tween data :', tweenData)
+          // nextTween.invalidate();
+        }
       }
-      if (nextTween) {
-        nextTween.invalidate();      
-        nextTween.vars.ease = updateEase(getEaseArray(globals.recalc.segmentSelected, globals.recalc.segmentNext));
+      else {
+        if (prevTween){
+          prevTween.invalidate();      
+          prevTween.vars.ease = updateEase(getEaseArray(globals.recalc.segmentPrev, globals.recalc.segmentSelected));
+        }
+        if (nextTween) {
+          nextTween.invalidate();      
+          nextTween.vars.ease = updateEase(getEaseArray(globals.recalc.segmentSelected, globals.recalc.segmentNext));
+        }
       }
-      // tween.play();
+
       globals.recalc = null;
     }
   };
+
 
   var createKeyFrame = function(x, y) {
     var insertionIndex = keyFrameInsertionCheck(x, y);
@@ -103,8 +125,8 @@ window.onload = function() {
       if (insertionIndex === null){
         console.log('null insertion');
 
-        var adjustedTime = ((x - prevCoordX) / scale.x.pixels) * scale.x.ratio;
-        var adjustedValue = (((y - prevCoordY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+        var adjustedTime = adjustTime(x, prevCoordX);
+        var adjustedValue = adjustValue(y, prevCoordY, prevPixelY);
 
         timeline.fromTo(box1, adjustedTime, {left: prevPixelY + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrames - 2], globals.xTSpline.segments[totalKeyFrames - 1]))});
         globals.xTSpline.tweenData.push({element: box1, adjustedTime: adjustedTime, prevPixelY: prevPixelY, adjustedValue: adjustedValue, prevCoordX: prevCoordX, prevCoordY: prevCoordY});
@@ -120,11 +142,9 @@ window.onload = function() {
           var currentTween = globals.xTSpline.tweenData[i];
 
           if (i === insertionIndex) {
-            var insertAdjustedTime = ((x - currentTween.prevCoordX) / scale.x.pixels) * scale.x.ratio;
-            var insertAdjustedValue = (((y - currentTween.prevCoordY) / scale.y.pixels) * scale.y.ratio) + currentTween.prevPixelY;
+            var insertAdjustedTime = adjustTime(x, currentTween.prevCoordX);
+            var insertAdjustedValue = adjustValue(y, currentTween.prevCoordY, currentTween.prevPixelY);
             var remainderTime = currentTween.adjustedTime - insertAdjustedTime;
-            console.log('insert time ',insertAdjustedTime, ' remainder time ', remainderTime);
-            console.log('current tweeeeeeeen', currentTween.adjustedTime, currentTween.prevCoordX);
 
             timeline.fromTo(currentTween.element, insertAdjustedTime, {left: currentTween.prevPixelY + "px"}, {left: insertAdjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionIndex], globals.xTSpline.segments[insertionIndex + 1]))});
 
@@ -140,7 +160,6 @@ window.onload = function() {
           }
         }
       }
-      console.log(timeline.getChildren());
     }
 
     if (insertionIndex === null) {
@@ -156,13 +175,5 @@ window.onload = function() {
       }
     }
     return null;
-  }
-
-  // sync.fromTo(box1, 2, {left:"500px"}, {left: "800px", delay: 1, onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[0], globals.xTSpline.segments[1]))}, "myTween");
-  // sync.fromTo(box1, 2, {left:"800px"}, {left: "200px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[1], globals.xTSpline.segments[2]))}, "myTween2");
-
-
-
-  // TweenMax.ticker.addEventListener('tick', logEvent);
-  // setTimeout(function(){TweenMax.ticker.removeEventListener('tick', logEvent)}, 1500);
+  };
 }
