@@ -93,7 +93,7 @@ window.onload = function() {
   var createKeyFrame = function(x, y) {
     var insertionIndex = keyFrameInsertionCheck(x, y);
 
-
+    console.log('insertionIndex', insertionIndex)
     globals.drawKeyFrame(x, y, insertionIndex);
     var totalKeyFrames = globals.xTSpline.segments.length;
 
@@ -113,25 +113,25 @@ window.onload = function() {
       }
 
       else {
-        console.log('insertionIndex found');
 
         timeline.clear();
 
         for (var i = 0; i < globals.xTSpline.tweenData.length; i ++) {
           var currentTween = globals.xTSpline.tweenData[i];
-          console.log(currentTween);
 
           if (i === insertionIndex) {
             var insertAdjustedTime = ((x - currentTween.prevCoordX) / scale.x.pixels) * scale.x.ratio;
             var insertAdjustedValue = (((y - currentTween.prevCoordY) / scale.y.pixels) * scale.y.ratio) + currentTween.prevPixelY;
             var remainderTime = currentTween.adjustedTime - insertAdjustedTime;
-
-            console.log('insertAdjustedTime', insertAdjustedTime);
+            console.log('insert time ',insertAdjustedTime, ' remainder time ', remainderTime);
+            console.log('current tweeeeeeeen', currentTween.adjustedTime, currentTween.prevCoordX);
 
             timeline.fromTo(currentTween.element, insertAdjustedTime, {left: currentTween.prevPixelY + "px"}, {left: insertAdjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionIndex], globals.xTSpline.segments[insertionIndex + 1]))});
 
             timeline.fromTo(currentTween.element, remainderTime, {left: insertAdjustedValue + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionIndex + 1], globals.xTSpline.segments[insertionIndex + 2]))});
-            globals.xTSpline.tweenData.splice(i + 1, 0, {element: box1, adjustedTime: insertAdjustedTime, prevPixelY: insertAdjustedValue, adjustedValue: currentTween.adjustedValue, prevCoordX: x, prevCoordY: y});
+            globals.xTSpline.tweenData.splice(i + 1, 0, {element: box1, adjustedTime: remainderTime, prevPixelY: insertAdjustedValue, adjustedValue: currentTween.adjustedValue, prevCoordX: x, prevCoordY: y});
+            currentTween.adjustedTime = insertAdjustedTime;
+            currentTween.adjustedValue = insertAdjustedValue;
             
             i++;
           }
@@ -140,6 +140,7 @@ window.onload = function() {
           }
         }
       }
+      console.log(timeline.getChildren());
     }
 
     if (insertionIndex === null) {
@@ -151,7 +152,6 @@ window.onload = function() {
   var keyFrameInsertionCheck = function(x, y) {
     for (var i = 0; i < globals.xTSpline.segments.length; i++) {
       if (globals.xTSpline.segments[i + 1] && x > globals.xTSpline.segments[i].point.x && x < globals.xTSpline.segments[i + 1].point.x) {
-        console.log('we have a point inbetween!, i is:', i);
         return i;
       }
     }
