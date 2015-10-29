@@ -16,13 +16,20 @@ var defaultHandles = 50;
 
 project.options.handleSize = 10;
 
-var xTSpline = globals.xTSpline = new Path();
-xTSpline.strokeColor = "black";
-xTSpline.smooth();
-xTSpline.fullySelected = true;
-xTSpline.tweenData = [];
+// var xTSpline = globals.xTSpline = new Path();
+// xTSpline.strokeColor = "black";
+// xTSpline.smooth();
+// xTSpline.fullySelected = true;
+// xTSpline.tweenData = [];
 // console.log(xTSpline.segments[0]);
 
+globals.buildPath = function(attribute) {
+  attribute.path = new Path();
+  attribute.path.strokeColor = "black";
+  attribute.path.smooth();
+  attribute.path.fullySelected = true;
+  attribute.tweenData = [];
+}
 var onMouseDown = function(event) {
   handleIn = handleOut = keyframe = null;
 
@@ -71,12 +78,12 @@ Path.prototype.resetPath = function() {
   return segments;
 };
 
-globals.drawKeyFrame = function(x, y, index) {
+globals.drawKeyFrame = function(x, y, index, path) {
 
   var newKeyframe = new Point(x, y);
   var keyHandleIn = new Point(-defaultHandles, 0);
   var keyHandleOut = new Point(defaultHandles, 0);
-  var addKeyFrame = index !== null ? xTSpline.insert(index + 1, new Segment(newKeyframe, keyHandleIn, keyHandleOut)) : xTSpline.add(new Segment(newKeyframe, keyHandleIn, keyHandleOut));
+  var addKeyFrame = index !== null ? path.insert(index + 1, new Segment(newKeyframe, keyHandleIn, keyHandleOut)) : path.add(new Segment(newKeyframe, keyHandleIn, keyHandleOut));
   
   addKeyFrame.selected = true;
   view.update();
@@ -105,21 +112,22 @@ globals.calcEase = function(segment1, segment2) {
 
 var onMouseUp = function(event) {
   var segmentPrev, segmentSelected, segmentNext;
+  var selectedPath = globals.attributes[globals.selected].path
 
   if (handleOut) {
-    segmentPrev = xTSpline.segments[handleOut.index - 1] ? xTSpline.segments[handleOut.index - 1] : null;
-    segmentSelected = xTSpline.segments[handleOut.index];
-    segmentNext = xTSpline.segments[handleOut.index + 1] ? xTSpline.segments[handleOut.index + 1] : null;
+    segmentPrev = selectedPath.segments[handleOut.index - 1] ? selectedPath.segments[handleOut.index - 1] : null;
+    segmentSelected = selectedPath.segments[handleOut.index];
+    segmentNext = selectedPath.segments[handleOut.index + 1] ? selectedPath.segments[handleOut.index + 1] : null;
   }
   else if (handleIn) {
-    segmentPrev = xTSpline.segments[handleIn.index - 1] ? xTSpline.segments[handleIn.index- 1] : null;
-    segmentSelected = xTSpline.segments[handleIn.index]; 
-    segmentNext = xTSpline.segments[handleIn.index + 1] ? xTSpline.segments[handleIn.index + 1] : null; 
+    segmentPrev = selectedPath.segments[handleIn.index - 1] ? selectedPath.segments[handleIn.index- 1] : null;
+    segmentSelected = selectedPath.segments[handleIn.index]; 
+    segmentNext = selectedPath.segments[handleIn.index + 1] ? selectedPath.segments[handleIn.index + 1] : null; 
   }
   else if (keyframe) {
-    segmentPrev = xTSpline.segments[keyframe.index - 1] ? xTSpline.segments[keyframe.index- 1] : null;
-    segmentSelected = xTSpline.segments[keyframe.index]; 
-    segmentNext = xTSpline.segments[keyframe.index + 1] ? xTSpline.segments[keyframe.index + 1] : null; 
+    segmentPrev = selectedPath.segments[keyframe.index - 1] ? selectedPath.segments[keyframe.index- 1] : null;
+    segmentSelected = selectedPath.segments[keyframe.index]; 
+    segmentNext = selectedPath.segments[keyframe.index + 1] ? selectedPath.segments[keyframe.index + 1] : null; 
 
   }
   globals.recalc = {segmentPrev: segmentPrev, segmentSelected: segmentSelected, segmentNext: segmentNext, keyframe: keyframe};

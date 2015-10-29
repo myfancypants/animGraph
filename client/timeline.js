@@ -1,13 +1,17 @@
 window.globals = {
-  xTSpline: {path: null, timeline: null, data: null},
-  yTSpline: {path: null, timeline: null, data: null}
+  attributes: {
+    'x-trans': {path: null, timeline: null, data: null, css: 'left'},
+    'y-trans': {path: null, timeline: null, data: null, css: 'top'} 
+  },
+  selected: 'x-trans'
 };  
 window.onload = function() {
   var box1 = document.getElementById('box1');
   var box2 = document.getElementById('box2');
   var canvas = document.getElementById('canvas');
   var play = false;
-  var timeline = new TimelineMax({repeat: -1});
+  // var timeline = new TimelineMax({repeat: -1});
+  var masterTimeline = new TimelineMax({repeat: -1});
   var scale = {
     x: {pixels: 100, ratio: 1},
     y: {pixels: 100, ratio: 300}
@@ -17,19 +21,16 @@ window.onload = function() {
   var initialY = 500;
   var prevCoordX = 0;
   var prevCoordY = 0;
-  var attributes = {
-    'x-trans': globals.xTSpline,
-    'y-trans': globals.yTSpline
-  };
-  var selected = globals.xTSpline;
+  var selectedAttr = globals.attributes[globals.selected];
+
 
   var playback = function() {
     if (play) {
-      timeline.play();
+      masterTimeline.play();
       play = false; 
     }
     else {
-      timeline.pause();
+      masterTimeline.pause();
       play = true;
     }
   };
@@ -39,16 +40,15 @@ window.onload = function() {
   });
 
  var attributeListener = document.getElementById('property-select').addEventListener('change', function(event) {
-    var attr = event.target.value;
-    if (attributes[attr]) {
-      console.log(attr);
-    }
+    globals.selected = event.target.value;
+    selectedAttr = globals.attributes[globals.selected];
  }) 
 
   var clearAnimationListener = document.getElementById('clear').addEventListener('click', function(){
-    timeline.clear();
-    globals.xTSpline.resetPath();
-    globals.xTSpline.tweenData = [];
+    selectedAttr.timeline.clear();
+    selectedAttr.path.resetPath();
+    selectedAttr.tweenData = [];
+
   })
 
   var keyPressListener = document.addEventListener('keydown', function(event){
@@ -98,15 +98,15 @@ window.onload = function() {
       var segmentPrev = globals.recalc.segmentPrev;
       var segmentNext = globals.recalc.segmentNext;
       var segmentSelected = globals.recalc.segmentSelected;
-      var prevTween = segmentPrev ? timeline.getChildren()[segmentPrev.index] : null;
-      var nextTween = segmentNext ? timeline.getChildren()[segmentSelected.index] : null;
+      var prevTween = segmentPrev ? selectedAttr.timeline.getChildren()[segmentPrev.index] : null;
+      var nextTween = segmentNext ? selectedAttr.timeline.getChildren()[segmentSelected.index] : null;
       var keyframe = globals.recalc.keyframe;
 
 
       if (keyframe) {
         if (prevTween) {
           // console.log(prevTween);
-          var tweenData = globals.xTSpline.tweenData[segmentPrev.index];
+          var tweenData = selectedAttr.tweenData[segmentPrev.index];
           var recalcDuration = adjustTime(keyframe.point.x, tweenData.prevCoordX);
           var recalcValue = adjustValue(keyframe.point.y, tweenData.prevCoordY, tweenData.prevPixelY);
           // console.log('prevTweeeeeeeen---> recalcValue',recalcValue, 'keyframe Y', keyframe.point.y, 'tween prevCoordY', tweenData.prevCoordY, '    prevPixel', tweenData.prevPixelY);
@@ -119,7 +119,7 @@ window.onload = function() {
 
         }
         if (nextTween) {
-          var tweenData = globals.xTSpline.tweenData[segmentSelected.index];
+          var tweenData = selectedAttr.tweenData[segmentSelected.index];
           var recalcDuration = adjustTime(segmentNext.point.x, keyframe.point.x);
           var recalcValue = adjustPrevPixelY(segmentNext.point.y, keyframe.point.y, tweenData.adjustedValue);
           
@@ -151,24 +151,30 @@ window.onload = function() {
   var createKeyFrame = function(x, y) {
     var insertionIndex = keyFrameInsertionCheck(x, y);
 
-    globals.drawKeyFrame(x, y, insertionIndex);
-    var totalKeyFrames = globals.xTSpline.segments.length;
+    globals.drawKeyFrame(x, y, insertionIndex, selectedAttr.path);
+    var totalKeyFrames = selectedAttr.path.segments.length;
 
 
     if (totalKeyFrames > 1) {
 
       if (insertionIndex === null){
         console.log('null insertion');
-        var length = globals.xTSpline.tweenData.length;
-        var previousTweenData = length ? globals.xTSpline.tweenData[length - 1] : globals.xTSpline.firstKey;
+        var length = selectedAttr.tweenData.length;
+        var previousTweenData = length ? selectedAttr.tweenData[length - 1] : selectedAttr.firstKey;
         // console.log(previousTweenData);
 
 
         var adjustedTime = adjustTime(x, previousTweenData.currentCoordX);
         var adjustedValue = adjustValue(y, previousTweenData.currentCoordY, previousTweenData.adjustedValue);
 
-        timeline.fromTo(box1, adjustedTime, {left: previousTweenData.adjustedValue + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrames - 2], globals.xTSpline.segments[totalKeyFrames - 1]))});
-        globals.xTSpline.tweenData.push({element: box1, adjustedTime: adjustedTime, prevPixelY: previousTweenData.adjustedValue, adjustedValue: adjustedValue, prevCoordX: previousTweenData.currentCoordX, prevCoordY: previousTweenData.currentCoordY, currentCoordX: x, currentCoordY: y});
+        var fromValuesObj = {};
+        var toValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[totalKeyFrames - 2], selectedAttr.path.segments[totalKeyFrames - 1]))};
+
+        fromValuesObj[selectedAttr.css] = previousTweenData.adjustedValue + "px"
+        toValuesObj[selectedAttr.css] = adjustedValue + "px"
+
+        selectedAttr.timeline.fromTo(box1, adjustedTime, fromValuesObj, toValuesObj);
+        selectedAttr.tweenData.push({element: box1, adjustedTime: adjustedTime, prevPixelY: previousTweenData.adjustedValue, adjustedValue: adjustedValue, prevCoordX: previousTweenData.currentCoordX, prevCoordY: previousTweenData.currentCoordY, currentCoordX: x, currentCoordY: y});
         // prevPixelY = adjustedValue;
       }
       else {
@@ -177,17 +183,17 @@ window.onload = function() {
     }
 
     if (totalKeyFrames === 1) {
-      globals.xTSpline.firstKey = {currentCoordX: x, currentCoordY: y, adjustedValue: initialY};
+      selectedAttr.firstKey = {currentCoordX: x, currentCoordY: y, adjustedValue: initialY};
     }
   };
 
   var rebuildTimeline = function(insertionObject) {
     insertionObject = insertionObject || null;
-    timeline.clear();
+    selectedAttr.timeline.clear();
 
     if (insertionObject) {
-      for (var i = 0; i < globals.xTSpline.tweenData.length; i++) {
-        var currentTween = globals.xTSpline.tweenData[i];
+      for (var i = 0; i < selectedAttr.tweenData.length; i++) {
+        var currentTween = selectedAttr.tweenData[i];
 
         if (i === insertionObject.insertionIndex) {
 
@@ -195,11 +201,21 @@ window.onload = function() {
           var insertAdjustedValue = adjustValue(insertionObject.y, currentTween.prevCoordY, currentTween.prevPixelY);
           var remainderTime = currentTween.adjustedTime - insertAdjustedTime;
 
-          timeline.fromTo(currentTween.element, insertAdjustedTime, {left: currentTween.prevPixelY + "px"}, {left: insertAdjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionObject.insertionIndex], globals.xTSpline.segments[insertionObject.insertionIndex + 1]))});
+          var prevFromValuesObj = {};
+          var prevToValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[insertionObject.insertionIndex], selectedAttr.path.segments[insertionObject.insertionIndex + 1]))};
+          var nextFromValuesObj = {};
+          var nextToValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[insertionObject.insertionIndex + 1], selectedAttr.path.segments[insertionObject.insertionIndex + 2]))};
 
-          timeline.fromTo(currentTween.element, remainderTime, {left: insertAdjustedValue + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionObject.insertionIndex + 1], globals.xTSpline.segments[insertionObject.insertionIndex + 2]))});
+          prevFromValuesObj[selectedAttr.css] = currentTween.prevPixelY + "px";
+          prevToValuesObj[selectedAttr.css] = insertAdjustedValue + "px";
+          nextFromValuesObj[selectedAttr.css] = insertAdjustedValue + "px";
+          nextToValuesObj[selectedAttr.css] = currentTween.adjustedValue + "px";
+
+          selectedAttr.timeline.fromTo(currentTween.element, insertAdjustedTime, prevFromValuesObj, prevToValuesObj);
+
+          selectedAttr.timeline.fromTo(currentTween.element, remainderTime, nextFromValuesObj, nextToValuesObj);
           
-          globals.xTSpline.tweenData.splice(i + 1, 0, {element: box1, adjustedTime: remainderTime, prevPixelY: insertAdjustedValue, adjustedValue: currentTween.adjustedValue, prevCoordX: insertionObject.x, prevCoordY: insertionObject.y});
+          selectedAttr.tweenData.splice(i + 1, 0, {element: box1, adjustedTime: remainderTime, prevPixelY: insertAdjustedValue, adjustedValue: currentTween.adjustedValue, prevCoordX: insertionObject.x, prevCoordY: insertionObject.y});
           
           currentTween.adjustedTime = insertAdjustedTime;
           currentTween.adjustedValue = insertAdjustedValue;
@@ -207,24 +223,42 @@ window.onload = function() {
           i++;
         }
         else {
-          timeline.fromTo(currentTween.element, currentTween.adjustedTime, {left: currentTween.prevPixelY + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[i], globals.xTSpline.segments[i + 1]))});
+          var fromValuesObj = {};
+          var toValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[i], selectedAttr.path.segments[i + 1]))};
+
+          fromValuesObj[selectedAttr.css] = currentTween.prevPixelY + "px";
+          toValuesObj[selectedAttr.css] = currentTween.adjustedValue + "px";
+          selectedAttr.timeline.fromTo(currentTween.element, currentTween.adjustedTime, fromValuesObj, toValuesObj);
         }
       }
     }
     else {
-      for (var i = 0; i < globals.xTSpline.tweenData.length; i++) {
-        var currentTween = globals.xTSpline.tweenData[i];
-        timeline.fromTo(currentTween.element, currentTween.adjustedTime, {left: currentTween.prevPixelY + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[i], globals.xTSpline.segments[i + 1]))});
+      for (var i = 0; i < selectedAttr.tweenData.length; i++) {
+        var currentTween = selectedAttr.tweenData[i];
+        var fromValuesObj = {};
+        var toValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[i], selectedAttr.path.segments[i + 1]))};
+
+        fromValuesObj[selectedAttr.css] = currentTween.prevPixelY + "px";
+        toValuesObj[selectedAttr.css] = currentTween.adjustedValue + "px";
+        selectedAttr.timeline.fromTo(currentTween.element, currentTween.adjustedTime, fromValuesObj, toValuesObj);
       }
     }
   };
 
   var keyFrameInsertionCheck = function(x, y) {
-    for (var i = 0; i < globals.xTSpline.segments.length; i++) {
-      if (globals.xTSpline.segments[i + 1] && x > globals.xTSpline.segments[i].point.x && x < globals.xTSpline.segments[i + 1].point.x) {
+    for (var i = 0; i < selectedAttr.path.segments.length; i++) {
+      if (selectedAttr.path.segments[i + 1] && x > selectedAttr.path.segments[i].point.x && x < selectedAttr.path.segments[i + 1].point.x) {
         return i;
       }
     }
     return null;
+  };
+
+  for (var key in globals.attributes) {
+    var attr = globals.attributes[key]
+    attr.timeline = new TimelineMax({repeat: -1});
+    console.log(key);
+    masterTimeline.add(attr.timeline, 0);
+    globals.buildPath(attr);
   };
 }
