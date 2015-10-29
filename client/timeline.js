@@ -11,7 +11,7 @@ window.onload = function() {
   var scale = {
     x: {pixels: 100, ratio: 1},
     y: {pixels: 100, ratio: 300}
-  }
+  };
   var prevPixelX = 100;
   var prevPixelY = 100;
   var prevCoordX = 0;
@@ -31,6 +31,12 @@ window.onload = function() {
   var playButtonListener = document.getElementById('play-pause').addEventListener('click', function(){
     playback();
   });
+
+  var clearAnimationListener = document.getElementById('clear').addEventListener('click', function(){
+    timeline.clear();
+    globals.xTSpline.resetPath();
+    globals.xTSpline.tweenData = [];
+  })
 
   var keyPressListener = document.addEventListener('keydown', function(event){
     if (event.keyCode === 32) {
@@ -180,7 +186,9 @@ window.onload = function() {
           timeline.fromTo(currentTween.element, insertAdjustedTime, {left: currentTween.prevPixelY + "px"}, {left: insertAdjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionObject.insertionIndex], globals.xTSpline.segments[insertionObject.insertionIndex + 1]))});
 
           timeline.fromTo(currentTween.element, remainderTime, {left: insertAdjustedValue + "px"}, {left: currentTween.adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[insertionObject.insertionIndex + 1], globals.xTSpline.segments[insertionObject.insertionIndex + 2]))});
+          
           globals.xTSpline.tweenData.splice(i + 1, 0, {element: box1, adjustedTime: remainderTime, prevPixelY: insertAdjustedValue, adjustedValue: currentTween.adjustedValue, prevCoordX: insertionObject.x, prevCoordY: insertionObject.y});
+          
           currentTween.adjustedTime = insertAdjustedTime;
           currentTween.adjustedValue = insertAdjustedValue;
           

@@ -63,6 +63,14 @@ var onMouseDrag = function(event) {
   }
 };
 
+Path.prototype.resetPath = function() {
+  var segments = this.removeSegments();
+  view.update();
+
+  return segments;
+
+}
+
 globals.drawKeyFrame = function(x, y, index) {
 
   var newKeyframe = new Point(x, y);
@@ -117,3 +125,4 @@ var onMouseUp = function(event) {
   globals.recalc = {segmentPrev: segmentPrev, segmentSelected: segmentSelected, segmentNext: segmentNext, keyframe: keyframe};
 
 }
+
