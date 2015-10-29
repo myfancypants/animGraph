@@ -44,8 +44,9 @@ var onMouseDown = function(event) {
   else if (hitResult.type === 'segment') {
     keyframe = hitResult.segment;
   }
-  else {
-    console.log('location--->',hitResult.location, 'location index', hitResult.location.index);
+  else if (hitResult.type === 'stroke') {
+    // console.log('location--->',hitResult.location, 'location index', hitResult.location.index);
+    console.log('hit result looking for path reference', hitResult);
   }
 };
 
@@ -68,8 +69,7 @@ Path.prototype.resetPath = function() {
   view.update();
 
   return segments;
-
-}
+};
 
 globals.drawKeyFrame = function(x, y, index) {
 

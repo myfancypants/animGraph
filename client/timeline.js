@@ -1,21 +1,27 @@
-window.globals = {};  
+window.globals = {
+  xTSpline: {path: null, timeline: null, data: null},
+  yTSpline: {path: null, timeline: null, data: null}
+};  
 window.onload = function() {
   var box1 = document.getElementById('box1');
   var box2 = document.getElementById('box2');
   var canvas = document.getElementById('canvas');
   var play = false;
   var timeline = new TimelineMax({repeat: -1});
-  var timeRot = new TimelineMax({delay: 2});
-  var timeColor = new TimelineMax({delay: 2});
-  var sync = new TimelineMax({repeat: -1});
   var scale = {
     x: {pixels: 100, ratio: 1},
     y: {pixels: 100, ratio: 300}
   };
-  var prevPixelX = 100;
-  var prevPixelY = 100;
+  var prevPixelX = 500;
+  var prevPixelY = 500;
+  var initialY = 500;
   var prevCoordX = 0;
   var prevCoordY = 0;
+  var attributes = {
+    'x-trans': globals.xTSpline,
+    'y-trans': globals.yTSpline
+  };
+  var selected = globals.xTSpline;
 
   var playback = function() {
     if (play) {
@@ -31,6 +37,13 @@ window.onload = function() {
   var playButtonListener = document.getElementById('play-pause').addEventListener('click', function(){
     playback();
   });
+
+ var attributeListener = document.getElementById('property-select').addEventListener('change', function(event) {
+    var attr = event.target.value;
+    if (attributes[attr]) {
+      console.log(attr);
+    }
+ }) 
 
   var clearAnimationListener = document.getElementById('clear').addEventListener('click', function(){
     timeline.clear();
@@ -157,7 +170,6 @@ window.onload = function() {
         timeline.fromTo(box1, adjustedTime, {left: previousTweenData.adjustedValue + "px"}, {left: adjustedValue + "px", onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(globals.xTSpline.segments[totalKeyFrames - 2], globals.xTSpline.segments[totalKeyFrames - 1]))});
         globals.xTSpline.tweenData.push({element: box1, adjustedTime: adjustedTime, prevPixelY: previousTweenData.adjustedValue, adjustedValue: adjustedValue, prevCoordX: previousTweenData.currentCoordX, prevCoordY: previousTweenData.currentCoordY, currentCoordX: x, currentCoordY: y});
         // prevPixelY = adjustedValue;
-        console.log(globals.xTSpline.tweenData);
       }
       else {
         rebuildTimeline({x:x, y:y, insertionIndex: insertionIndex});
@@ -165,7 +177,7 @@ window.onload = function() {
     }
 
     if (totalKeyFrames === 1) {
-      globals.xTSpline.firstKey = {currentCoordX: x, currentCoordY: y, adjustedValue: 100};
+      globals.xTSpline.firstKey = {currentCoordX: x, currentCoordY: y, adjustedValue: initialY};
     }
   };
 
