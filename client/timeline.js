@@ -18,7 +18,7 @@ window.onload = function() {
   };
   var prevPixelX = 500;
   var prevPixelY = 500;
-  var initialY = 500;
+  var initialY = 200;
   var prevCoordX = 0;
   var prevCoordY = 0;
   var selectedAttr = globals.attributes[globals.selected];
@@ -60,6 +60,12 @@ window.onload = function() {
     }
   });
 
+  globals.updateSelection = function(key) {
+    document.getElementById('property-select').value = key;
+    globals.selected = key;
+    selectedAttr = globals.attributes[globals.selected];
+  };
+
   var trackMouse = function(event) {
     var x = event.layerX;
     var y = event.layerY;
@@ -86,7 +92,7 @@ window.onload = function() {
   };
 
   var adjustValue = function(y, prevY, prevPixelY) {
-    return (((y - prevY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+    return Math.ceil((((y - prevY) / scale.y.pixels) * scale.y.ratio) + prevPixelY);
   };
 
   var adjustPrevPixelY = function(y, prevY, nextPixelY) {
@@ -116,6 +122,7 @@ window.onload = function() {
           // prevTween.duration(recalcDuration);
           tweenData.adjustedTime = recalcDuration;
           tweenData.adjustedValue = recalcValue;
+          console.log('prev tween recalcValue', recalcValue);
 
         }
         if (nextTween) {
@@ -128,6 +135,7 @@ window.onload = function() {
           // nextTween.duration(recalcDuration);
           tweenData.adjustedTime = recalcDuration;
           tweenData.prevPixelY = recalcValue;
+          console.log('nextTween recalcValue', recalcValue)
 
         }
         rebuildTimeline();
@@ -256,7 +264,7 @@ window.onload = function() {
 
   for (var key in globals.attributes) {
     var attr = globals.attributes[key]
-    attr.timeline = new TimelineMax({repeat: -1});
+    attr.timeline = new TimelineMax();
     console.log(key);
     masterTimeline.add(attr.timeline, 0);
     globals.buildPath(attr);

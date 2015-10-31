@@ -16,44 +16,57 @@ var defaultHandles = 50;
 
 project.options.handleSize = 10;
 
-// var xTSpline = globals.xTSpline = new Path();
-// xTSpline.strokeColor = "black";
-// xTSpline.smooth();
-// xTSpline.fullySelected = true;
-// xTSpline.tweenData = [];
-// console.log(xTSpline.segments[0]);
-
 globals.buildPath = function(attribute) {
   attribute.path = new Path();
-  attribute.path.strokeColor = "black";
-  attribute.path.smooth();
+  // attribute.path.smooth();
   attribute.path.fullySelected = true;
+  attribute.path.selected = false;
   attribute.tweenData = [];
+  attribute.path.style.strokeWidth = '4';
+  attribute.path.style.strokeColor = '#306EFF';
+  // attribute.path.style.selectedColor = 'red';
+
 }
 var onMouseDown = function(event) {
   handleIn = handleOut = keyframe = null;
+  var currentPath = globals.attributes[globals.selected].path
 
   var hitResult = project.hitTest(event.point, hitOptions);
-
   if (!hitResult) {
-    // for (var i = 0; i < xTSpline.segments.length; i++) {
-    //   if (xTSpline.segments[i + 1] && event.point.x > xTSpline.segments[i].point.x && event.point.x < xTSpline.segments[i + 1].point.x) {
-    //     console.log('we have a point inbetween!, i is:', i);
-    //   }
-    // }
+    currentPath.fullySelected = false;
+    currentPath.selected = true;
+    // globals.attributes[globals.selected].path.style.strokeColor = 'grey';
+
   }
-  else if (hitResult.type === 'handle-in') {
-      handleIn = hitResult.segment;
+  else if (hitResult.item === currentPath) {
+    hitResult.item.selected = false;
+    hitResult.item.fullySelected = true;
+    hitResult.item.style.strokeColor = '#306EFF';
+
+    if (hitResult.type === 'handle-in') {
+        handleIn = hitResult.segment;
+    }
+    else if (hitResult.type === 'handle-out') {
+      handleOut = hitResult.segment;
+    }
+    else if (hitResult.type === 'segment') {
+      keyframe = hitResult.segment;
+      keyframe.selected = true;
+
+    }
+    else if (hitResult.type === 'stroke') {
+      console.log('hit result looking for path reference', hitResult);
+    }
   }
-  else if (hitResult.type === 'handle-out') {
-    handleOut = hitResult.segment;
-  }
-  else if (hitResult.type === 'segment') {
-    keyframe = hitResult.segment;
-  }
-  else if (hitResult.type === 'stroke') {
-    // console.log('location--->',hitResult.location, 'location index', hitResult.location.index);
-    console.log('hit result looking for path reference', hitResult);
+  else {
+    for (var key in globals.attributes) {
+      if (globals.attributes[key].path === hitResult.item) {
+        currentPath.fullySelected = false;
+        currentPath.selected = true;
+
+        globals.updateSelection(key);
+      }
+    }
   }
 };
 
@@ -84,8 +97,7 @@ globals.drawKeyFrame = function(x, y, index, path) {
   var keyHandleIn = new Point(-defaultHandles, 0);
   var keyHandleOut = new Point(defaultHandles, 0);
   var addKeyFrame = index !== null ? path.insert(index + 1, new Segment(newKeyframe, keyHandleIn, keyHandleOut)) : path.add(new Segment(newKeyframe, keyHandleIn, keyHandleOut));
-  
-  addKeyFrame.selected = true;
+ path.fullySelected = true;
   view.update();
   
 }
