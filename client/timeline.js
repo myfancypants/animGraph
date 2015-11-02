@@ -1,7 +1,10 @@
 window.globals = {
   attributes: {
-    'x-trans': {path: null, timeline: null, data: null, css: 'left'},
-    'y-trans': {path: null, timeline: null, data: null, css: 'top'} 
+    'x-trans': {path: null, timeline: null, data: null, css: 'left', scale: {pixels: 100, ratio: 300}, initialValue: 400},
+    'y-trans': {path: null, timeline: null, data: null, css: 'top', scale: {pixels: 100, ratio: 300}, initialValue: 400},
+    'rotation': {path: null, timeline: null, data: null, css: 'rotation', scale: {pixels: 100, ratio: 300}, initialValue: 0},
+    'x-scale': {path: null, timeline: null, data: null, css: 'scaleX', scale: {pixels: 300, ratio: 1}, initialValue: 1}, 
+    'y-scale': {path: null, timeline: null, data: null, css: 'scaleY', scale: {pixels: 300, ratio: 1}, initialValue: 1}
   },
   selected: 'x-trans'
 };  
@@ -16,6 +19,7 @@ window.onload = function() {
     x: {pixels: 100, ratio: 1},
     y: {pixels: 100, ratio: 300}
   };
+  var timeScale = {pixels: 100, ratio: 1};
   var prevPixelX = 500;
   var prevPixelY = 500;
   var initialY = 200;
@@ -41,6 +45,8 @@ window.onload = function() {
   });
 
  var attributeListener = document.getElementById('property-select').addEventListener('change', function(event) {
+    globals.attributes[globals.selected].path.fullySelected = false;
+    globals.attributes[globals.selected].path.selected = true;
     globals.selected = event.target.value;
     selectedAttr = globals.attributes[globals.selected];
     disableFocus(this);
@@ -95,15 +101,15 @@ window.onload = function() {
   };
 
   var adjustTime = function(x, prevX) {
-    return ((x - prevX) / scale.x.pixels) * scale.x.ratio;
+    return ((x - prevX) / timeScale.pixels) * timeScale.ratio;
   };
 
-  var adjustValue = function(y, prevY, prevPixelY) {
-    return (((y - prevY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
+  var adjustValue = function(y, prevY, prevPixelY, scale) {
+    return (((y - prevY) / scale.pixels) * scale.ratio) + prevPixelY;
   };
 
-  var adjustPrevPixelY = function(y, prevY, nextPixelY) {
-    return -((((y - prevY) / scale.y.pixels) * scale.y.ratio) - nextPixelY);
+  var adjustPrevPixelY = function(y, prevY, nextPixelY, scale) {
+    return -((((y - prevY) / scale.pixels) * scale.ratio) - nextPixelY);
   };
 
   var recalcEase = function(tween) {
@@ -121,7 +127,7 @@ window.onload = function() {
           // console.log(prevTween);
           var tweenData = selectedAttr.tweenData[segmentPrev.index];
           var recalcDuration = adjustTime(keyframe.point.x, tweenData.prevCoordX);
-          var recalcValue = adjustValue(keyframe.point.y, tweenData.prevCoordY, tweenData.prevPixelY);
+          var recalcValue = adjustValue(keyframe.point.y, tweenData.prevCoordY, tweenData.prevPixelY, selectedAttr.scale);
           // console.log('prevTweeeeeeeen---> recalcValue',recalcValue, 'keyframe Y', keyframe.point.y, 'tween prevCoordY', tweenData.prevCoordY, '    prevPixel', tweenData.prevPixelY);
 
           // prevTween.invalidate();
@@ -137,7 +143,7 @@ window.onload = function() {
         if (nextTween) {
           var tweenData = selectedAttr.tweenData[segmentSelected.index];
           var recalcDuration = adjustTime(segmentNext.point.x, keyframe.point.x);
-          var recalcValue = adjustPrevPixelY(segmentNext.point.y, keyframe.point.y, tweenData.adjustedValue);
+          var recalcValue = adjustPrevPixelY(segmentNext.point.y, keyframe.point.y, tweenData.adjustedValue, selectedAttr.scale);
           
           // nextTween.invaliate();
           // nextTween.vars.startAt.left = recalcValue + 'px';
@@ -184,7 +190,7 @@ window.onload = function() {
 
 
         var adjustedTime = adjustTime(x, previousTweenData.currentCoordX);
-        var adjustedValue = adjustValue(y, previousTweenData.currentCoordY, previousTweenData.adjustedValue);
+        var adjustedValue = adjustValue(y, previousTweenData.currentCoordY, previousTweenData.adjustedValue, selectedAttr.scale);
 
         var fromValuesObj = {};
         var toValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[totalKeyFrames - 2], selectedAttr.path.segments[totalKeyFrames - 1]))};
@@ -202,7 +208,7 @@ window.onload = function() {
     }
 
     if (totalKeyFrames === 1) {
-      selectedAttr.firstKey = {currentCoordX: x, currentCoordY: y, adjustedValue: initialY};
+      selectedAttr.firstKey = {currentCoordX: x, currentCoordY: y, adjustedValue: selectedAttr.initialValue};
     }
   };
 
@@ -217,7 +223,7 @@ window.onload = function() {
         if (i === insertionObject.insertionIndex) {
 
           var insertAdjustedTime = adjustTime(insertionObject.x, currentTween.prevCoordX);
-          var insertAdjustedValue = adjustValue(insertionObject.y, currentTween.prevCoordY, currentTween.prevPixelY);
+          var insertAdjustedValue = adjustValue(insertionObject.y, currentTween.prevCoordY, currentTween.prevPixelY, selectedAttr.scale);
           var remainderTime = currentTween.adjustedTime - insertAdjustedTime;
 
           var prevFromValuesObj = {};
@@ -276,7 +282,6 @@ window.onload = function() {
   for (var key in globals.attributes) {
     var attr = globals.attributes[key]
     attr.timeline = new TimelineMax();
-    console.log(key);
     masterTimeline.add(attr.timeline, 0);
     globals.buildPath(attr);
   };

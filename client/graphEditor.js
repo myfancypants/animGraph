@@ -55,7 +55,7 @@ var onMouseDown = function(event) {
 
     }
     else if (hitResult.type === 'stroke') {
-      console.log('hit result looking for path reference', hitResult);
+      // console.log('hit result looking for path reference', hitResult);
     }
   }
   else {
