@@ -37,19 +37,22 @@ window.onload = function() {
 
   var playButtonListener = document.getElementById('play-pause').addEventListener('click', function(){
     playback();
+    disableFocus(this);
   });
 
  var attributeListener = document.getElementById('property-select').addEventListener('change', function(event) {
     globals.selected = event.target.value;
     selectedAttr = globals.attributes[globals.selected];
+    disableFocus(this);
  }) 
 
   var clearAnimationListener = document.getElementById('clear').addEventListener('click', function(){
     selectedAttr.timeline.clear();
     selectedAttr.path.resetPath();
     selectedAttr.tweenData = [];
-
+    disableFocus(this);
   })
+
 
   var keyPressListener = document.addEventListener('keydown', function(event){
     if (event.keyCode === 32) {
@@ -58,6 +61,10 @@ window.onload = function() {
     if (event.keyCode === 75) {
       canvas.addEventListener('click', trackMouse);
     }
+  });
+  var addKeyFrameListener = document.getElementById('add-keyframe').addEventListener('click', function(){
+    canvas.addEventListener('click', trackMouse);
+    disableFocus(this);
   });
 
   globals.updateSelection = function(key) {
@@ -74,9 +81,9 @@ window.onload = function() {
     canvas.removeEventListener('click', trackMouse);
   };
 
-  var addKeyFrameListener = document.getElementById('add-keyframe').addEventListener('click', function(){
-    canvas.addEventListener('click', trackMouse);
-  });
+  var disableFocus = function(element) {
+    element.blur();
+  }
   
   var updateEase = function(ease) {
     // return new Ease(BezierEasing(ease[0], ease[1], ease[2], ease[3]).get);
@@ -92,7 +99,7 @@ window.onload = function() {
   };
 
   var adjustValue = function(y, prevY, prevPixelY) {
-    return Math.ceil((((y - prevY) / scale.y.pixels) * scale.y.ratio) + prevPixelY);
+    return (((y - prevY) / scale.y.pixels) * scale.y.ratio) + prevPixelY;
   };
 
   var adjustPrevPixelY = function(y, prevY, nextPixelY) {
@@ -122,7 +129,9 @@ window.onload = function() {
           // prevTween.duration(recalcDuration);
           tweenData.adjustedTime = recalcDuration;
           tweenData.adjustedValue = recalcValue;
-          console.log('prev tween recalcValue', recalcValue);
+          tweenData.currentCoordX = keyframe.point.x;
+          tweenData.currentCoordY = keyframe.point.y;
+          console.log('prev tween recalcValue', recalcValue, 'prevTween recalcDuration', recalcDuration);
 
         }
         if (nextTween) {
@@ -130,12 +139,14 @@ window.onload = function() {
           var recalcDuration = adjustTime(segmentNext.point.x, keyframe.point.x);
           var recalcValue = adjustPrevPixelY(segmentNext.point.y, keyframe.point.y, tweenData.adjustedValue);
           
-          // nextTween.invalidate();
+          // nextTween.invaliate();
           // nextTween.vars.startAt.left = recalcValue + 'px';
           // nextTween.duration(recalcDuration);
           tweenData.adjustedTime = recalcDuration;
           tweenData.prevPixelY = recalcValue;
-          console.log('nextTween recalcValue', recalcValue)
+          tweenData.prevCoordX = keyframe.point.x;
+          tweenData.prevCoordY = keyframe.point.y;
+          console.log('nextTween recalcValue', recalcValue, 'nextTween recalcDuration', recalcDuration);
 
         }
         rebuildTimeline();
