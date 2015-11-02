@@ -16,14 +16,21 @@ var defaultHandles = 50;
 
 project.options.handleSize = 10;
 
-globals.buildPath = function(attribute) {
+globals.buildPath = function(attribute, key) {
+  var keyArray = JSON.parse(globals.defaultKeyframeJSON[key]);
   attribute.path = new Path();
   // attribute.path.smooth();
   attribute.path.fullySelected = true;
   attribute.path.selected = false;
-  attribute.tweenData = [];
   attribute.path.style.strokeWidth = '4';
   attribute.path.style.strokeColor = '#306EFF';
+
+  // for (var i = 0; i < keyArray.length; i++) {
+  //   attribute.path.add(new Segment(keyArray[i][0], keyArray[i][1], keyArray[i][2]));
+  // }
+  // attribute.path.selected = true;
+
+  // view.update();
   // attribute.path.style.selectedColor = 'red';
 
 }
@@ -91,11 +98,11 @@ Path.prototype.resetPath = function() {
   return segments;
 };
 
-globals.drawKeyFrame = function(x, y, index, path) {
+globals.drawKeyFrame = function(x, y, index, path, handleIn, handleOut) {
 
   var newKeyframe = new Point(x, y);
-  var keyHandleIn = new Point(-defaultHandles, 0);
-  var keyHandleOut = new Point(defaultHandles, 0);
+  var keyHandleIn = handleIn ? new Point(handleIn[0], -handleOut[1]) :new Point(-defaultHandles, 0);
+  var keyHandleOut = handleOut ? new Point(handleOut[0], handleOut[1]) : new Point(defaultHandles, 0);
   var addKeyFrame = index !== null ? path.insert(index + 1, new Segment(newKeyframe, keyHandleIn, keyHandleOut)) : path.add(new Segment(newKeyframe, keyHandleIn, keyHandleOut));
  path.fullySelected = true;
   view.update();

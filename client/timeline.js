@@ -1,13 +1,11 @@
-window.globals = {
-  attributes: {
-    'x-trans': {path: null, timeline: null, data: null, css: 'left', scale: {pixels: 100, ratio: 300}, initialValue: 400},
-    'y-trans': {path: null, timeline: null, data: null, css: 'top', scale: {pixels: 100, ratio: 300}, initialValue: 400},
-    'rotation': {path: null, timeline: null, data: null, css: 'rotation', scale: {pixels: 100, ratio: 300}, initialValue: 0},
-    'x-scale': {path: null, timeline: null, data: null, css: 'scaleX', scale: {pixels: 300, ratio: 1}, initialValue: 1}, 
-    'y-scale': {path: null, timeline: null, data: null, css: 'scaleY', scale: {pixels: 300, ratio: 1}, initialValue: 1}
-  },
-  selected: 'x-trans'
-};  
+window.globals.attributes = {
+    'x-trans': {path: null, timeline: null, tweenData: [], css: 'left', scale: {pixels: 100, ratio: 300}, initialValue: 400},
+    'y-trans': {path: null, timeline: null, tweenData: [], css: 'top', scale: {pixels: 100, ratio: 300}, initialValue: 500},
+    'rotation': {path: null, timeline: null, tweenData: [], css: 'rotation', scale: {pixels: 100, ratio: 300}, initialValue: 0},
+    'x-scale': {path: null, timeline: null, tweenData: [], css: 'scaleX', scale: {pixels: 300, ratio: 1}, initialValue: 1}, 
+    'y-scale': {path: null, timeline: null, tweenData: [], css: 'scaleY', scale: {pixels: 300, ratio: 1}, initialValue: 1}
+  }
+window.globals.selected = 'x-trans';
 window.onload = function() {
   var box1 = document.getElementById('box1');
   var box2 = document.getElementById('box2');
@@ -173,10 +171,12 @@ window.onload = function() {
   };
 
 
-  var createKeyFrame = function(x, y) {
+  var createKeyFrame = function(x, y, handleIn, handleOut) {
     var insertionIndex = keyFrameInsertionCheck(x, y);
+    handleIn = handleIn || null;
+    handleOut = handleOut || null;
 
-    globals.drawKeyFrame(x, y, insertionIndex, selectedAttr.path);
+    globals.drawKeyFrame(x, y, insertionIndex, selectedAttr.path, handleIn, handleOut);
     var totalKeyFrames = selectedAttr.path.segments.length;
 
 
@@ -259,6 +259,7 @@ window.onload = function() {
     }
     else {
       for (var i = 0; i < selectedAttr.tweenData.length; i++) {
+        console.log('this should happen a lot');
         var currentTween = selectedAttr.tweenData[i];
         var fromValuesObj = {};
         var toValuesObj = {onUpdate: recalcEase, onUpdateParams:["{self}"], ease: updateEase(getEaseArray(selectedAttr.path.segments[i], selectedAttr.path.segments[i + 1]))};
@@ -281,8 +282,16 @@ window.onload = function() {
 
   for (var key in globals.attributes) {
     var attr = globals.attributes[key]
+    var loadData = JSON.parse(globals.defaultKeyframeJSON[key]);
+
     attr.timeline = new TimelineMax();
     masterTimeline.add(attr.timeline, 0);
-    globals.buildPath(attr);
+    globals.buildPath(attr, key);
+    selectedAttr = attr;
+
+    for (var i = 0; i < loadData.length; i++) {
+      createKeyFrame(loadData[i][0][0], loadData[i][0][1], loadData[i][1], loadData[i][2]);
+    }
   };
+  selectedAttr = globals.attributes['x-trans'];
 }
