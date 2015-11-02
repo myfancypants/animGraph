@@ -282,6 +282,7 @@ window.onload = function() {
 
   for (var key in globals.attributes) {
     var attr = globals.attributes[key]
+    // debugger;
     var loadData = JSON.parse(globals.defaultKeyframeJSON[key]);
 
     attr.timeline = new TimelineMax();

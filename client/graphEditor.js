@@ -99,14 +99,13 @@ Path.prototype.resetPath = function() {
 };
 
 globals.drawKeyFrame = function(x, y, index, path, handleIn, handleOut) {
-
   var newKeyframe = new Point(x, y);
   var keyHandleIn = handleIn ? new Point(handleIn[0], -handleOut[1]) :new Point(-defaultHandles, 0);
   var keyHandleOut = handleOut ? new Point(handleOut[0], handleOut[1]) : new Point(defaultHandles, 0);
   var addKeyFrame = index !== null ? path.insert(index + 1, new Segment(newKeyframe, keyHandleIn, keyHandleOut)) : path.add(new Segment(newKeyframe, keyHandleIn, keyHandleOut));
- path.fullySelected = true;
-  view.update();
   
+  path.selected = true;
+  view.update();
 }
 
 globals.calcEase = function(segment1, segment2) {
