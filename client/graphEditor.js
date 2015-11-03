@@ -24,6 +24,7 @@ globals.buildPath = function(attribute, key) {
   attribute.path.selected = false;
   attribute.path.style.strokeWidth = '4';
   attribute.path.style.strokeColor = attribute.color;
+  attribute.path.style.selectedColor = attribute.color;
 
   // for (var i = 0; i < keyArray.length; i++) {
   //   attribute.path.add(new Segment(keyArray[i][0], keyArray[i][1], keyArray[i][2]));
@@ -46,8 +47,8 @@ var onMouseDown = function(event) {
 
   }
   else if (hitResult.item === currentPath) {
-    // hitResult.item.selected = false;
-    // hitResult.item.fullySelected = true;
+    hitResult.item.selected = false;
+    hitResult.item.fullySelected = true;
     // hitResult.item.style.strokeColor = '#306EFF';
 
     if (hitResult.type === 'handle-in') {

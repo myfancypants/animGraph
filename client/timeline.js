@@ -92,7 +92,7 @@ window.onload = function() {
 
   globals.updateSelection = function(key) {
     document.getElementById('property-select').value = key;
-    updateDOMSelection(key)
+    updateDOMSelection(key);
     globals.selected = key;
     selectedAttr = globals.attributes[globals.selected];
   };
@@ -325,8 +325,27 @@ window.onload = function() {
     tempDOM.id = key;
     tempDOM.className = 'properties'
     tempDOM.innerHTML = domValues[key];
+
+    // tempDOM.addEventListener('click', function(event){
+    //   console.log(event);
+    // })
     legend.appendChild(tempDOM);
   };
   selectedAttr = globals.attributes['x-trans'];
   updateDOMSelection('x-trans');
+
+  // document.getElementById('x-trans').addEventListener('click', function(event){
+  //   console.log('hi hi hi hi');
+  // });
+  var domProperties = document.getElementsByClassName('properties');
+  for (var i = 0; i < domProperties.length; i++) {
+    console.log(domProperties[i]);
+    domProperties[i].addEventListener('click', function(event) {
+      selectedAttr.path.fullySelected = false;
+      selectedAttr.path.selected = true;
+      globals.updateSelection(event.target.id);
+      globals.reRender();
+    });
+  } 
+  // debugger;
 }
