@@ -2,8 +2,8 @@ window.globals.attributes = {
     'x-trans': {path: null, timeline: null, tweenData: [], css: 'left', scale: {pixels: 100, ratio: 300}, initialValue: 400, color: '#306EFF'},
     'y-trans': {path: null, timeline: null, tweenData: [], css: 'top', scale: {pixels: 100, ratio: 300}, initialValue: 500, color: '#F62217'},
     'rotation': {path: null, timeline: null, tweenData: [], css: 'rotation', scale: {pixels: 100, ratio: 300}, initialValue: 0, color: '#41A317'},
-    'x-scale': {path: null, timeline: null, tweenData: [], css: 'scaleX', scale: {pixels: 300, ratio: 1}, initialValue: 1, color: '#FDD017'}, 
-    'y-scale': {path: null, timeline: null, tweenData: [], css: 'scaleY', scale: {pixels: 300, ratio: 1}, initialValue: 1, color: '#F535AA'}
+    'x-scale': {path: null, timeline: null, tweenData: [], css: 'scaleX', scale: {pixels: 200, ratio: 1}, initialValue: 1, color: '#FDD017'}, 
+    'y-scale': {path: null, timeline: null, tweenData: [], css: 'scaleY', scale: {pixels: 200, ratio: 1}, initialValue: 1, color: '#F535AA'}
   }
 window.globals.selected = 'x-trans';
 window.onload = function() {

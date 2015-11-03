@@ -41,8 +41,8 @@ var onMouseDown = function(event) {
 
   var hitResult = project.hitTest(event.point, hitOptions);
   if (!hitResult) {
-    currentPath.fullySelected = false;
-    currentPath.selected = true;
+    // currentPath.fullySelected = false;
+    // currentPath.selected = true;
     // globals.attributes[globals.selected].path.style.strokeColor = 'grey';
 
   }
