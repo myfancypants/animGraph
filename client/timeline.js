@@ -1,9 +1,9 @@
 window.globals.attributes = {
-    'x-trans': {path: null, timeline: null, tweenData: [], css: 'left', scale: {pixels: 100, ratio: 300}, initialValue: 400},
-    'y-trans': {path: null, timeline: null, tweenData: [], css: 'top', scale: {pixels: 100, ratio: 300}, initialValue: 500},
-    'rotation': {path: null, timeline: null, tweenData: [], css: 'rotation', scale: {pixels: 100, ratio: 300}, initialValue: 0},
-    'x-scale': {path: null, timeline: null, tweenData: [], css: 'scaleX', scale: {pixels: 300, ratio: 1}, initialValue: 1}, 
-    'y-scale': {path: null, timeline: null, tweenData: [], css: 'scaleY', scale: {pixels: 300, ratio: 1}, initialValue: 1}
+    'x-trans': {path: null, timeline: null, tweenData: [], css: 'left', scale: {pixels: 100, ratio: 300}, initialValue: 400, color: '#306EFF'},
+    'y-trans': {path: null, timeline: null, tweenData: [], css: 'top', scale: {pixels: 100, ratio: 300}, initialValue: 500, color: '#F62217'},
+    'rotation': {path: null, timeline: null, tweenData: [], css: 'rotation', scale: {pixels: 100, ratio: 300}, initialValue: 0, color: '#41A317'},
+    'x-scale': {path: null, timeline: null, tweenData: [], css: 'scaleX', scale: {pixels: 300, ratio: 1}, initialValue: 1, color: '#FDD017'}, 
+    'y-scale': {path: null, timeline: null, tweenData: [], css: 'scaleY', scale: {pixels: 300, ratio: 1}, initialValue: 1, color: '#F535AA'}
   }
 window.globals.selected = 'x-trans';
 window.onload = function() {
@@ -24,7 +24,13 @@ window.onload = function() {
   var prevCoordX = 0;
   var prevCoordY = 0;
   var selectedAttr = globals.attributes[globals.selected];
-
+  var domValues = {
+    'x-trans': 'X Translate',
+    'y-trans':'Y Translate',
+    'rotation': 'Rotation',
+    'x-scale': 'X Scale',
+    'y-scale': 'Y Scale'
+  }
 
   var playback = function() {
     if (play) {
@@ -45,17 +51,30 @@ window.onload = function() {
  var attributeListener = document.getElementById('property-select').addEventListener('change', function(event) {
     globals.attributes[globals.selected].path.fullySelected = false;
     globals.attributes[globals.selected].path.selected = true;
+    updateDOMSelection(event.target.value);
     globals.selected = event.target.value;
     selectedAttr = globals.attributes[globals.selected];
-    disableFocus(this);
- }) 
 
-  var clearAnimationListener = document.getElementById('clear').addEventListener('click', function(){
+    globals.reRender();
+    disableFocus(this);
+ }); 
+
+  var clearSelectedAnimationListener = document.getElementById('clear').addEventListener('click', function(){
     selectedAttr.timeline.clear();
     selectedAttr.path.resetPath();
     selectedAttr.tweenData = [];
     disableFocus(this);
-  })
+  });
+
+  var clearAllAnimationListener = document.getElementById('clear-all').addEventListener('click', function(){
+    for (var key in globals.attributes) {
+      globals.attributes[key].timeline.clear();
+      globals.attributes[key].path.resetPath();
+      globals.attributes[key].tweenData = [];
+    }
+
+    disableFocus(this);
+  });
 
 
   var keyPressListener = document.addEventListener('keydown', function(event){
@@ -73,6 +92,7 @@ window.onload = function() {
 
   globals.updateSelection = function(key) {
     document.getElementById('property-select').value = key;
+    updateDOMSelection(key)
     globals.selected = key;
     selectedAttr = globals.attributes[globals.selected];
   };
@@ -183,7 +203,6 @@ window.onload = function() {
     if (totalKeyFrames > 1) {
 
       if (insertionIndex === null){
-        console.log('null insertion');
         var length = selectedAttr.tweenData.length;
         var previousTweenData = length ? selectedAttr.tweenData[length - 1] : selectedAttr.firstKey;
         // console.log(previousTweenData);
@@ -280,6 +299,13 @@ window.onload = function() {
     return null;
   };
 
+  var updateDOMSelection = function(key) {
+    var currentSelection = document.getElementById(globals.selected);
+    currentSelection.className = currentSelection.className.split(' ')[0];
+
+    document.getElementById(key).className += " selected";
+  }
+
   for (var key in globals.attributes) {
     var attr = globals.attributes[key]
     // debugger;
@@ -293,6 +319,14 @@ window.onload = function() {
     for (var i = 0; i < loadData.length; i++) {
       createKeyFrame(loadData[i][0][0], loadData[i][0][1], loadData[i][1], loadData[i][2]);
     }
+
+    var legend = document.getElementById('legend');
+    var tempDOM = document.createElement('div');
+    tempDOM.id = key;
+    tempDOM.className = 'properties'
+    tempDOM.innerHTML = domValues[key];
+    legend.appendChild(tempDOM);
   };
   selectedAttr = globals.attributes['x-trans'];
+  updateDOMSelection('x-trans');
 }

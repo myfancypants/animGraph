@@ -13,6 +13,8 @@
 
   /* Scale canvas with resize attribute to full size */
   canvas[resize] {
+      position: relative;
+      top: -75px;
       height: 100% ;
       width: 100%;
   }
@@ -27,12 +29,36 @@
     top: 100px;
     left: 500px;
   }
-  #box2 {
-    left:0px;
-    top:100px;
+  .buttons {
+    position: relative;
+    left: 10%;
   }
-  #box3 {
-    top:200px;
+  .properties {
+    padding-left: 20px;
+  }
+  .selected {
+    border: 1px solid black;
+  }
+  #legend {
+    position: relative;
+    float: left;
+    top: 10%;
+    left: 70%;
+  }
+  #x-trans {
+    color: #306EFF;
+  }
+  #y-trans {
+    color: #F62217;
+  }
+  #rotation {
+    color: #41A317;
+  }
+  #x-scale {
+    color: #FDD017;
+  }
+  #y-scale {
+    color: #F535AA;
   }
 </style>
 <script type="text/javascript" src="./lib/gsap/src/uncompressed/TweenMax.js"></script>
@@ -45,17 +71,21 @@
 <script type="text/javascript" src="./timeline.js"></script>
 </head>
 <body>
-  <button id="play-pause">Play/Pause (spacebar)</button>
-  <button id="add-keyframe">Add Keyframe (k)</button>
-  <select name="property-select" id="property-select">
-    <option value="x-trans">X Translate</option>
-    <option value="y-trans">Y Translate</option>
-    <option value="rotation">Rotation</option>
-    <option value="x-scale">X Scale</option>
-    <option value="y-scale">Y Scale</option>
-  </select>
-  <button id="clear">Clear Animation</button>
+  <div class="buttons">
+    <button id="play-pause">Play/Pause (spacebar)</button>
+    <button id="add-keyframe">Add Keyframe (k)</button>
+    <select name="property-select" id="property-select">
+      <option value="x-trans">X Translate</option>
+      <option value="y-trans">Y Translate</option>
+      <option value="rotation">Rotation</option>
+      <option value="x-scale">X Scale</option>
+      <option value="y-scale">Y Scale</option>
+    </select>
+    <button id="clear">Clear Selected Animation</button>
+    <button id="clear-all">Clear All Animation</button>
+  </div>
   <div class="box" id="box1"></div>
+  <div id="legend">Animated Properties:</div>
 
   <canvas id="canvas" resize></canvas>
 </body>

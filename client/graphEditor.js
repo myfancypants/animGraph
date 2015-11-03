@@ -23,7 +23,7 @@ globals.buildPath = function(attribute, key) {
   attribute.path.fullySelected = true;
   attribute.path.selected = false;
   attribute.path.style.strokeWidth = '4';
-  attribute.path.style.strokeColor = '#306EFF';
+  attribute.path.style.strokeColor = attribute.color;
 
   // for (var i = 0; i < keyArray.length; i++) {
   //   attribute.path.add(new Segment(keyArray[i][0], keyArray[i][1], keyArray[i][2]));
@@ -46,9 +46,9 @@ var onMouseDown = function(event) {
 
   }
   else if (hitResult.item === currentPath) {
-    hitResult.item.selected = false;
-    hitResult.item.fullySelected = true;
-    hitResult.item.style.strokeColor = '#306EFF';
+    // hitResult.item.selected = false;
+    // hitResult.item.fullySelected = true;
+    // hitResult.item.style.strokeColor = '#306EFF';
 
     if (hitResult.type === 'handle-in') {
         handleIn = hitResult.segment;
@@ -72,6 +72,8 @@ var onMouseDown = function(event) {
         currentPath.selected = true;
 
         globals.updateSelection(key);
+        globals.attributes[key].path.selected = false;
+        globals.attributes[key].path.fullySelected = true;
       }
     }
   }
@@ -150,5 +152,13 @@ var onMouseUp = function(event) {
   }
   globals.recalc = {segmentPrev: segmentPrev, segmentSelected: segmentSelected, segmentNext: segmentNext, keyframe: keyframe};
 
-}
+};
+
+globals.reRender = function(){
+  var currentSelection = globals.attributes[globals.selected];
+  currentSelection.path.selected = false;
+  currentSelection.path.fullySelected = true;
+  view.update();
+};
+
 
